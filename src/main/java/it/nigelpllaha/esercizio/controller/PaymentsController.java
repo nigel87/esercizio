@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import it.nigelpllaha.esercizio.constants.Mapping;
 
+import static it.nigelpllaha.esercizio.constants.Mapping.PAYMENTS_ENDPOINT;
+
 @RestController
-@RequestMapping("${esercizio.payments-url}")
+@RequestMapping(PAYMENTS_ENDPOINT)
 public class PaymentsController {
     PaymentsService paymentsService;
 

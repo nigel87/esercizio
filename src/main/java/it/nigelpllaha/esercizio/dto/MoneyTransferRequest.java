@@ -37,11 +37,11 @@ public class MoneyTransferRequest {
     private String currency;
 
     @NotBlank (message = FIELD_REQUIRED)
-    @PositiveBigDecimal (message = INVALID_AMOUNT)
+    @PositiveBigDecimal
     private String amount;
 
     @NotBlank (message = FIELD_REQUIRED)
-    @FutureOrCurrentDate(message =  FUTURE_OR_CURRENT_DATE)
+    @FutureOrCurrentDate
     private String executionDate; // data in formato YYYY-MM-DD
 
 }

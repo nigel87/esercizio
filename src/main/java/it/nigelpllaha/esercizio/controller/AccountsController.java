@@ -20,6 +20,7 @@ import static it.nigelpllaha.esercizio.constants.Mapping.ACCOUNTS_ENDPOINT;
 public class AccountsController {
 
     AccountsService accountsService;
+
     public AccountsController(AccountsService accountsService) {
         this.accountsService = accountsService;
     }
@@ -28,9 +29,11 @@ public class AccountsController {
     @GetMapping(Mapping.LETTURA_TRANSAZIONI)
     public ResponseEntity<Response<AccountTransactionsDTO>> getAccountTransactions(
             @PathVariable Long accountId,
-            @Valid @ModelAttribute AccountTransactionsRequest requestDto) {
-        AccountTransactionsDTO payload = accountsService.getAccountTransactions(accountId, requestDto.getFromAccountingDate(),requestDto.getToAccountingDate());
-        Response<AccountTransactionsDTO> response = new Response<>(true,payload,null);
+            @Valid @ModelAttribute AccountTransactionsRequest accountTransaction) {
+        AccountTransactionsDTO payload = accountsService.getAccountTransactions(
+                accountId, accountTransaction.getFromAccountingDate(),
+                accountTransaction.getToAccountingDate());
+        Response<AccountTransactionsDTO> response = new Response<>(true, payload, null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -38,7 +41,7 @@ public class AccountsController {
     @GetMapping(Mapping.SALDO)
     public ResponseEntity<Response<AccountBalanceDTO>> getAccountBalance(@PathVariable Long accountId) {
         AccountBalanceDTO payload = accountsService.getAccountBalance(accountId);
-        Response<AccountBalanceDTO> response = new Response<>(true,payload,null);
+        Response<AccountBalanceDTO> response = new Response<>(true, payload, null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

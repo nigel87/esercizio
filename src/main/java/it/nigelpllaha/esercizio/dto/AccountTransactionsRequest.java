@@ -9,10 +9,10 @@ import java.time.LocalDate;
 
 
 @Data
-@AfterStartDate (message = ErrorMessages.FROM_AFTER_TO_DATE)
+@AfterStartDate
 public class AccountTransactionsRequest {
-    @NotFutureDate (message = ErrorMessages.PAST_OR_CURRENT_DATE)
+    @NotFutureDate
     LocalDate fromAccountingDate;
-    @NotFutureDate (message = ErrorMessages.PAST_OR_CURRENT_DATE)
+    @NotFutureDate
     LocalDate toAccountingDate;
 }

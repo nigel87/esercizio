@@ -3,18 +3,13 @@
 package it.nigelpllaha.esercizio.service;
 
 
-import it.nigelpllaha.esercizio.dto.MoneyTransferDTO;
+import it.nigelpllaha.esercizio.constants.Mapping;
 import it.nigelpllaha.esercizio.dto.fabrick.FabrickResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.PayloadAccountBalance;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.FabrickAccountTransactionResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.TransactionDto;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.AccountDTO;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.CreditorDTO;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferRequest;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferResponse;
 import it.nigelpllaha.esercizio.repository.TransactionRepository;
 import it.nigelpllaha.esercizio.dto.AccountTransactionsDTO;
-import it.nigelpllaha.esercizio.dto.MoneyTransferRequest;
 import it.nigelpllaha.esercizio.entity.Transaction;
 import it.nigelpllaha.esercizio.exception.FabrickApiException;
 import it.nigelpllaha.esercizio.config.EsercizioConfigProperties;
@@ -40,12 +35,7 @@ public class AccountsServiceImpl implements AccountsService {
     private final TransactionRepository transactionRepository;
     private final EsercizioConfigProperties properties;
     static ModelMapper modelMapper = new ModelMapper();
-    public static final String OPERAZIONE_LETTURA_SALDO = "/accounts/{accountId}/balance";
-    public static final String OPERAZIONE_LETTURA_TRANSAZIONI = "/accounts/{accountId}/transactions?fromAccountingDate={fromAccountingDate}&toAccountingDate={toAccountingDate}";
-    public static final String OPERAZIONE_BONIFICO = "/accounts/{accountId}/payments/money-transfers";
 
-    private static final String TIME_ZONE_HEADER = "X-Time-Zone";
-    private static final String TIME_ZONE_VALUE = "Europe/Rome";
 
     public AccountsServiceImpl(RestTemplate restTemplate,
                                EsercizioConfigProperties properties,
@@ -57,7 +47,7 @@ public class AccountsServiceImpl implements AccountsService {
     }
 
     public AccountBalanceDTO getAccountBalance(Long accountId) {
-        String url = properties.fabrickApiUrl() + OPERAZIONE_LETTURA_SALDO;
+        String url = properties.fabrickApiUrl() + Mapping.ACCOUNT_BALANCE_METHOD;
         url = url.replace("{accountId}", accountId.toString());
          try {
              FabrickResponse<PayloadAccountBalance> fabrickResponse = restTemplate.getForObject(url,  FabrickResponse.class);
@@ -75,7 +65,7 @@ public class AccountsServiceImpl implements AccountsService {
     public AccountTransactionsDTO getAccountTransactions(Long accountId,
                                                          LocalDate fromAccountingDate,
                                                          LocalDate toAccountingDate) {
-        String url = properties.fabrickApiUrl() + OPERAZIONE_LETTURA_TRANSAZIONI;
+        String url = properties.fabrickApiUrl() + Mapping.ACCOUNT_TRANSACTIONS_METHOD;
         url = url.replace("{accountId}", accountId.toString())
                 .replace("{fromAccountingDate}", fromAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("{toAccountingDate}", toAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));

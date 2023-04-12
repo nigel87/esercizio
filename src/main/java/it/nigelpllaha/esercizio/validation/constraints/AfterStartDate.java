@@ -3,6 +3,7 @@ package it.nigelpllaha.esercizio.validation.constraints;
 
 
 
+import it.nigelpllaha.esercizio.constants.ErrorMessages;
 import it.nigelpllaha.esercizio.validation.AfterStartDateValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -15,7 +16,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
  public @interface AfterStartDate {
-    String message() default "To date must be after from date";
+    String message() default ErrorMessages.FROM_AFTER_TO_DATE;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

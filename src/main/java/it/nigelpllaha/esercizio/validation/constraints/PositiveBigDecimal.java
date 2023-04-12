@@ -5,6 +5,7 @@ import it.nigelpllaha.esercizio.validation.PositiveBigDecimalValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.*;
+import it.nigelpllaha.esercizio.constants.ErrorMessages;
 
 @Documented
 @Constraint(validatedBy = PositiveBigDecimalValidator.class)
@@ -12,7 +13,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PositiveBigDecimal {
 
-    String message() default "Invalid positive BigDecimal value";
+    String message() default ErrorMessages.INVALID_AMOUNT;
 
     Class<?>[] groups() default {};
 

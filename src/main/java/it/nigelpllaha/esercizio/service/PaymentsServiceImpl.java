@@ -1,6 +1,7 @@
 package it.nigelpllaha.esercizio.service;
 
 import it.nigelpllaha.esercizio.config.EsercizioConfigProperties;
+import it.nigelpllaha.esercizio.constants.Mapping;
 import it.nigelpllaha.esercizio.dto.MoneyTransferDTO;
 import it.nigelpllaha.esercizio.dto.MoneyTransferRequest;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.AccountDTO;
@@ -17,9 +18,10 @@ import org.springframework.web.client.RestTemplate;
 
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.NULL_FABRICK_RESPONSE;
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.REST_CLIENT_EXCEPTION;
+
 @Service
 public class PaymentsServiceImpl implements PaymentsService {
-    private static final String OPERAZIONE_BONIFICO ="" ;
+
     RestTemplate restTemplate;
     EsercizioConfigProperties properties;
     public PaymentsServiceImpl(RestTemplate restTemplate,
@@ -37,7 +39,7 @@ public class PaymentsServiceImpl implements PaymentsService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(TIME_ZONE_HEADER, TIME_ZONE_VALUE);
         FabrickMoneyTransferRequest request = buildFabrickMoneyTransferRequest(input);
-        final String url = (properties.fabrickApiUrl() + OPERAZIONE_BONIFICO)
+        final String url = (properties.fabrickApiUrl() + Mapping.MONEY_TRANSFER_METHOD)
                 .replace("{accountId}", input.getAccountId().toString());
 
         HttpEntity<FabrickMoneyTransferRequest> httpEntity = new HttpEntity<>(request, headers);
