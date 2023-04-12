@@ -2,14 +2,12 @@
 
 package it.nigelpllaha.esercizio.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import it.nigelpllaha.esercizio.dto.MoneyTransferDTO;
 import it.nigelpllaha.esercizio.dto.fabrick.FabrickResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.PayloadAccountBalance;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.FabrickAccountTransactionResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.TransactionDto;
-import it.nigelpllaha.esercizio.dto.fabrick.error.FabrickErrorMessage;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.AccountDTO;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.CreditorDTO;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferRequest;
@@ -30,8 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
+
 
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.*;
 
@@ -62,22 +59,18 @@ public class FabrickServiceImpl implements FabrickService {
     public AccountBalanceDTO getAccountBalance(Long accountId) {
         String url = properties.fabrickApiUrl() + OPERAZIONE_LETTURA_SALDO;
         url = url.replace("{accountId}", accountId.toString());
-        AccountBalanceDTO response = new AccountBalanceDTO();
-        try {
+         try {
              FabrickResponse<PayloadAccountBalance> fabrickResponse = restTemplate.getForObject(url,  FabrickResponse.class);
             if (fabrickResponse == null) {
                 throw new FabrickApiException(HttpStatus.BAD_GATEWAY, NULL_FABRICK_RESPONSE);
             }
-            response = modelMapper.map(fabrickResponse.getPayload(), AccountBalanceDTO.class);
+             return modelMapper.map(fabrickResponse.getPayload(), AccountBalanceDTO.class);
         } catch (HttpClientErrorException e) {
-            FabrickErrorMessage fabrickErrorMessage = parseFabrickException (e.getMessage(),e.getStatusCode());
-            handleFabrickErrorMessage(e.getStatusCode(), fabrickErrorMessage);
-
+            throw new FabrickApiException(e.getStatusCode(), e.getMessage());
         } catch (RestClientException e) {
             throw new FabrickApiException(HttpStatus.INTERNAL_SERVER_ERROR, REST_CLIENT_EXCEPTION);
         }
-        return response;
-    }
+     }
 
     public AccountTransactionsDTO getAccountTransactions(Long accountId,
                                                          LocalDate fromAccountingDate,
@@ -86,23 +79,19 @@ public class FabrickServiceImpl implements FabrickService {
         url = url.replace("{accountId}", accountId.toString())
                 .replace("{fromAccountingDate}", fromAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("{toAccountingDate}", toAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        AccountTransactionsDTO response = new AccountTransactionsDTO();
-        try {
+         try {
             FabrickAccountTransactionResponse fabrickResponse =
                     restTemplate.getForObject(url, FabrickAccountTransactionResponse.class);
-
             if (fabrickResponse == null) {
                 throw new FabrickApiException(HttpStatus.BAD_GATEWAY , NULL_FABRICK_RESPONSE);
             }
             saveResponseToDatabase(fabrickResponse);
-            response = modelMapper.map(fabrickResponse.getPayload(), AccountTransactionsDTO.class);
+            return  modelMapper.map(fabrickResponse.getPayload(), AccountTransactionsDTO.class);
         } catch (HttpClientErrorException e) {
-            FabrickErrorMessage fabrickErrorMessage = parseFabrickException (e.getMessage(), e.getStatusCode());
-            handleFabrickErrorMessage(e.getStatusCode(), fabrickErrorMessage);
+            throw new FabrickApiException(e.getStatusCode(), e.getMessage());
         } catch (RestClientException e) {
             throw new FabrickApiException(HttpStatus.INTERNAL_SERVER_ERROR, REST_CLIENT_EXCEPTION);
         }
-        return response;
     }
 
     public MoneyTransferDTO createMoneyTransfer(MoneyTransferRequest input) {
@@ -113,8 +102,7 @@ public class FabrickServiceImpl implements FabrickService {
         final String url = (properties.fabrickApiUrl() + OPERAZIONE_BONIFICO)
                 .replace("{accountId}", input.getAccountId().toString());
 
-        MoneyTransferDTO response = new MoneyTransferDTO();
-        HttpEntity<FabrickMoneyTransferRequest> httpEntity = new HttpEntity<>(request, headers);
+         HttpEntity<FabrickMoneyTransferRequest> httpEntity = new HttpEntity<>(request, headers);
         try {
             ResponseEntity<FabrickMoneyTransferResponse> fabrickResponse = restTemplate.postForEntity(url, httpEntity, FabrickMoneyTransferResponse.class);
 
@@ -123,47 +111,16 @@ public class FabrickServiceImpl implements FabrickService {
             }
             FabrickMoneyTransferResponse body = fabrickResponse.getBody();
             System.out.println("response" + fabrickResponse);
-            response = convertResponse(body.getPayload());
+            return convertResponse(body.getPayload());
         } catch (HttpClientErrorException e) {
-            FabrickErrorMessage fabrickErrorMessage = parseFabrickException (e.getMessage(),e.getStatusCode());
-            handleFabrickErrorMessage(e.getStatusCode(), fabrickErrorMessage);
-         } catch (RestClientException e) {
+            throw new FabrickApiException(e.getStatusCode(), e.getMessage());
+
+        } catch (RestClientException e) {
             throw new FabrickApiException(HttpStatus.INTERNAL_SERVER_ERROR, REST_CLIENT_EXCEPTION);
         }
-        return response;
-     }
+      }
+
     // Private methods
-
-    private static void handleFabrickErrorMessage(HttpStatusCode httpStatusCode, FabrickErrorMessage fabrickErrorMessage) {
-        if (fabrickErrorMessage !=null && fabrickErrorMessage.getErrors()!= null && !fabrickErrorMessage.getErrors().isEmpty()) {
-            List<String> errorMessages = fabrickErrorMessage.getErrors().stream()
-                    .map(error -> "codice errore:" + error.getCode()
-                            + ", descrizione errore:" + error.getDescription())
-                    .collect(Collectors.toList());
-            throw new FabrickApiException(httpStatusCode, errorMessages);
-        }
-        throw new FabrickApiException(httpStatusCode, HTTP_ERROR + fabrickErrorMessage);
-
-    }
-
-    private FabrickErrorMessage parseFabrickException(String jsonMessage, HttpStatusCode httpStatusCode) {
-        int startIndex = jsonMessage.indexOf('{');
-        int endIndex = jsonMessage.lastIndexOf('}');
-        if (startIndex < 0 || endIndex < 0) {
-            throw new FabrickApiException(httpStatusCode, PARSING_ERROR + jsonMessage);
-        }
-
-
-        String jsonPayload = jsonMessage.substring(startIndex, endIndex + 1).replace("<EOL>", "");
-        ObjectMapper jacksonMapper = new ObjectMapper();
-        try {
-            return jacksonMapper.readValue(jsonPayload, FabrickErrorMessage.class);
-        } catch (JsonProcessingException e) {
-            throw new FabrickApiException(httpStatusCode, PARSING_ERROR + jsonMessage);
-
-        }
-
-     }
 
 
 

@@ -1,6 +1,5 @@
 package it.nigelpllaha.esercizio.exception;
 
-import it.nigelpllaha.esercizio.dto.ApiErrorResponse;
 import it.nigelpllaha.esercizio.dto.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.*;
 
