@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.FIELD_REQUIRED;
+import static it.nigelpllaha.esercizio.constants.ErrorMessages.MAXIMUM_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -63,8 +64,7 @@ class MoneyTransferRequestTest {
     }
 
     @Test
-    public void testCurrencyValidation_EmptyAccountCode_ThrowsException() {
-        // Request valida
+    public void testAccountCodeValidation_EmptyAccountCode_ThrowsException() {
         MoneyTransferRequest request = new MoneyTransferRequest();
         request.setAccountId(14537780L);
         request.setAccountCode("");
@@ -96,6 +96,87 @@ class MoneyTransferRequestTest {
         assertTrue(dimensioneMinima.isPresent());
     }
 
+
+
+    @Test
+    public void testReceiverName_ReceiverNameBiggerThanEightyCharacters_ThrowsException() {
+        MoneyTransferRequest request = new MoneyTransferRequest();
+        request.setAccountId(14537780L);
+        request.setAccountCode("IT16W0300203280825777873732");
+        request.setReceiverName("John Doe Test John Doe Test John Doe Test John Doe Test John Doe Test John Doe Test John");
+        request.setDescription("Payment invoice 75/2017");
+        request.setCurrency("EUR");
+        request.setAmount("800");
+        request.setExecutionDate(curretDate);
+
+        Set<ConstraintViolation<MoneyTransferRequest>> violations = validator.validate(request);
+
+        // Verifica che è presemte la vilazione
+        assertEquals(1, violations.size());
+
+
+        Optional<String> campoObligatorio = violations.stream()
+                .map(ConstraintViolation::getMessageTemplate)
+                .filter(message -> message.equals(MAXIMUM_SIZE))
+                .findAny();
+
+         // Verifica che sono presenti le violazioni attese
+         assertTrue(campoObligatorio.isPresent());
+    }
+
+
+    @Test
+    public void testReceiverName_NullReceiverName_ThrowsException() {
+        MoneyTransferRequest request = new MoneyTransferRequest();
+        request.setAccountId(14537780L);
+        request.setAccountCode("IT16W0300203280825777873732");
+        request.setReceiverName(null);
+        request.setDescription("Payment invoice 75/2017");
+        request.setCurrency("EUR");
+        request.setAmount("800");
+        request.setExecutionDate(curretDate);
+
+        Set<ConstraintViolation<MoneyTransferRequest>> violations = validator.validate(request);
+
+        // Verifica che è presemte la vilazione
+        assertEquals(1, violations.size());
+
+
+        Optional<String> campoObligatorio = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .filter(message -> message.equals(FIELD_REQUIRED))
+                .findAny();
+
+        // Verifica che sono presenti le violazioni attese
+        assertTrue(campoObligatorio.isPresent());
+    }
+
+
+    @Test
+    public void testDescriptionName_NullDescription_ThrowsException() {
+        MoneyTransferRequest request = new MoneyTransferRequest();
+        request.setAccountId(14537780L);
+        request.setAccountCode("IT16W0300203280825777873732");
+        request.setReceiverName("John Doe");
+        request.setDescription(null);
+        request.setCurrency("EUR");
+        request.setAmount("800");
+        request.setExecutionDate(curretDate);
+
+        Set<ConstraintViolation<MoneyTransferRequest>> violations = validator.validate(request);
+
+        // Verifica che è presemte la vilazione
+        assertEquals(1, violations.size());
+
+
+        Optional<String> campoObligatorio = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .filter(message -> message.equals(FIELD_REQUIRED))
+                .findAny();
+
+        // Verifica che sono presenti le violazioni attese
+        assertTrue(campoObligatorio.isPresent());
+    }
 
 
 }
