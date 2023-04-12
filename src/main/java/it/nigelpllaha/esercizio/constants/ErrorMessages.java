@@ -12,7 +12,9 @@ public class ErrorMessages {
      public static final String FIELD_REQUIRED = "Il campo è obbligatorio";
     public static final String FUTURE_OR_CURRENT_DATE = "Inserire una data valida nel formato YYYY-MM-DD. " +
                                                         "La data deve essere odierna o una data futura.";
+    public static final String PAST_OR_CURRENT_DATE ="La data non può essere nel futuro. Scegliere una data passata o odierna";
 
+    public static final String FROM_AFTER_TO_DATE = "Inserire una data 'fromAccountingDate' precedente o uguale alla data 'toAccountingDate'";
     public static final String FIELD_LENGTH_THREE  ="Il campo deve contenere esattamente 3 carateri";
 
     public static final String INVALID_AMOUNT  = "Inserire un importo valido. (Numero decimale positivo)";

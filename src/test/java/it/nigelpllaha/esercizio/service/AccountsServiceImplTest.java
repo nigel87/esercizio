@@ -37,9 +37,9 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-class FabrickServiceImplTest {
+class AccountsServiceImplTest {
     @InjectMocks
-    private FabrickServiceImpl fabrickService;
+    private AccountsServiceImpl fabrickService;
 
     @Mock
     private RestTemplate restTemplate;
@@ -68,39 +68,32 @@ class FabrickServiceImplTest {
 
     private static  String URL_ACCOUNT_BALANCE;
 
-    private static  String URL_MONEY_TRANSFER;
 
-    private static String NAME = "John Doe";
+
 
     @BeforeAll
     public static void init () {
-        properties = new EsercizioConfigProperties(
+        properties = new EsercizioConfigProperties("","", //TODO
                 "/api/esercizio/",
                 "v1.0",
                 "https://sandbox.platfr.io/api/gbs/banking/v4.0",
                 "12345678900");
 
-        URL_ACCOUNT_TRANSACTION = (properties.fabrickApiUrl() + FabrickServiceImpl.OPERAZIONE_LETTURA_TRANSAZIONI )
+        URL_ACCOUNT_TRANSACTION = (properties.fabrickApiUrl() + AccountsServiceImpl.OPERAZIONE_LETTURA_TRANSAZIONI )
                 .replace("{accountId}", ACCOUNT_ID.toString())
                 .replace("{fromAccountingDate}", FROM_ACCOUNTING_DATE.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("{toAccountingDate}", TO_ACCOUNTING_DATE.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
 
-        URL_ACCOUNT_BALANCE  = (properties.fabrickApiUrl() + FabrickServiceImpl.OPERAZIONE_LETTURA_SALDO )
+        URL_ACCOUNT_BALANCE  = (properties.fabrickApiUrl() + AccountsServiceImpl.OPERAZIONE_LETTURA_SALDO )
                 .replace("{accountId}", ACCOUNT_ID.toString());
-
-        URL_MONEY_TRANSFER = (properties.fabrickApiUrl() + FabrickServiceImpl.OPERAZIONE_BONIFICO)
-                .replace("{accountId}", ACCOUNT_ID.toString());
-
-
-
 
     }
 
 
     @BeforeEach
     public void setUp() {
-        fabrickService = new FabrickServiceImpl(restTemplate, properties,transactionRepository);
+        fabrickService = new AccountsServiceImpl(restTemplate, properties,transactionRepository);
     }
 
 
@@ -140,7 +133,7 @@ class FabrickServiceImplTest {
 
         FabrickResponse<PayloadAccountBalance> fabrickResponse = new FabrickResponse<>(HttpStatus.OK.toString(),payloadAccountBalance,null); ;
 
-        String urlAccountBalanceBigAmount = (properties.fabrickApiUrl() + FabrickServiceImpl.OPERAZIONE_LETTURA_SALDO )
+        String urlAccountBalanceBigAmount = (properties.fabrickApiUrl() + AccountsServiceImpl.OPERAZIONE_LETTURA_SALDO )
                 .replace("{accountId}", ACCOUNT_ID_BIG_AMOUNT_BALANCE.toString());
 
         when(restTemplate.getForObject(eq(urlAccountBalanceBigAmount), eq(FabrickResponse.class))).thenReturn(fabrickResponse);

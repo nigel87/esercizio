@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 import static it.nigelpllaha.esercizio.constants.ErrorMessages.*;
 
 @Service
-public class FabrickServiceImpl implements FabrickService {
+public class AccountsServiceImpl implements AccountsService {
 
     private final RestTemplate restTemplate;
 
@@ -47,9 +47,9 @@ public class FabrickServiceImpl implements FabrickService {
     private static final String TIME_ZONE_HEADER = "X-Time-Zone";
     private static final String TIME_ZONE_VALUE = "Europe/Rome";
 
-    public FabrickServiceImpl(RestTemplate restTemplate,
-                              EsercizioConfigProperties properties,
-                              TransactionRepository transactionRepository) {
+    public AccountsServiceImpl(RestTemplate restTemplate,
+                               EsercizioConfigProperties properties,
+                               TransactionRepository transactionRepository) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.transactionRepository = transactionRepository;
@@ -94,66 +94,15 @@ public class FabrickServiceImpl implements FabrickService {
         }
     }
 
-    public MoneyTransferDTO createMoneyTransfer(MoneyTransferRequest input) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(TIME_ZONE_HEADER, TIME_ZONE_VALUE);
-        FabrickMoneyTransferRequest request = buildFabrickMoneyTransferRequest(input);
-        final String url = (properties.fabrickApiUrl() + OPERAZIONE_BONIFICO)
-                .replace("{accountId}", input.getAccountId().toString());
-
-         HttpEntity<FabrickMoneyTransferRequest> httpEntity = new HttpEntity<>(request, headers);
-        try {
-            ResponseEntity<FabrickMoneyTransferResponse> fabrickResponse = restTemplate.postForEntity(url, httpEntity, FabrickMoneyTransferResponse.class);
-
-            if (fabrickResponse.getBody() == null) {
-                throw new FabrickApiException(HttpStatus.BAD_GATEWAY, NULL_FABRICK_RESPONSE);
-            }
-            FabrickMoneyTransferResponse body = fabrickResponse.getBody();
-            System.out.println("response" + fabrickResponse);
-            return convertResponse(body.getPayload());
-        } catch (HttpClientErrorException e) {
-            throw new FabrickApiException(e.getStatusCode(), e.getMessage());
-
-        } catch (RestClientException e) {
-            throw new FabrickApiException(HttpStatus.INTERNAL_SERVER_ERROR, REST_CLIENT_EXCEPTION);
-        }
-      }
-
     // Private methods
-
-
-
-    private static FabrickMoneyTransferRequest buildFabrickMoneyTransferRequest(MoneyTransferRequest input) {
-        FabrickMoneyTransferRequest request = new FabrickMoneyTransferRequest();
-
-        AccountDTO account = new AccountDTO();
-        account.setAccountCode(input.getAccountCode());
-
-        CreditorDTO creditor = new CreditorDTO();
-        creditor.setName(input.getReceiverName());
-        creditor.setAccount(account);
-
-        request.setCreditor(creditor);
-        request.setDescription(input.getDescription());
-        request.setAmount(input.getAmount());
-        request.setCurrency(input.getCurrency());
-        request.setExecutionDate(input.getExecutionDate());
-        request.setInstant(false);
-        request.setUrgent(false);
-        return request;
-    }
 
     private void saveResponseToDatabase(FabrickAccountTransactionResponse fabrickResponse) {
         fabrickResponse.getPayload().getList().stream()
-                .map(FabrickServiceImpl::transactionDtoToEntityConverter)
+                .map(AccountsServiceImpl::transactionDtoToEntityConverter)
                 .forEach(transactionRepository::save);
     }
 
 
-    private MoneyTransferDTO convertResponse (it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.Payload fabrickPayload) {
-        return modelMapper.map(fabrickPayload, MoneyTransferDTO.class);
-    }
     private static Transaction transactionDtoToEntityConverter( TransactionDto dto) {
         Transaction transaction = modelMapper.map(dto, Transaction.class);
         if (dto.getType() != null) {
@@ -162,7 +111,6 @@ public class FabrickServiceImpl implements FabrickService {
         }
         return transaction;
     }
-
 
 }
 

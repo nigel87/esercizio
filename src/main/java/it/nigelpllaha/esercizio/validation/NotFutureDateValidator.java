@@ -5,27 +5,20 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 
-public class NotFutureDateValidator implements ConstraintValidator<NotFutureDate, Date> {
+public class NotFutureDateValidator implements ConstraintValidator<NotFutureDate, LocalDate> {
     @Override
     public void initialize(NotFutureDate constraintAnnotation) {
     }
 
     @Override
-    public boolean isValid(Date date, ConstraintValidatorContext context) {
-        if (date == null) {
+    public boolean isValid(LocalDate dateToValidate, ConstraintValidatorContext context) {
+        if (dateToValidate == null) {
             return true;
         }
         var currentDate = LocalDate.now();
-        LocalDate dateToValidate = convertToLocalDate(date);
-        return !dateToValidate.isAfter(currentDate);
+         return !dateToValidate.isAfter(currentDate);
     }
 
-    private  LocalDate convertToLocalDate(Date dateToConvert) {
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-    }
+
 }

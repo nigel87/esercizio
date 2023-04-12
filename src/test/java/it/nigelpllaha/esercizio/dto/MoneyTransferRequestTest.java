@@ -99,7 +99,7 @@ class MoneyTransferRequestTest {
 
 
     @Test
-    public void testReceiverName_ReceiverNameBiggerThanEightyCharacters_ThrowsException() {
+    public void testReceiverNameValidation_ReceiverNameBiggerThanEightyCharacters_ThrowsException() {
         MoneyTransferRequest request = new MoneyTransferRequest();
         request.setAccountId(14537780L);
         request.setAccountCode("IT16W0300203280825777873732");
@@ -126,7 +126,7 @@ class MoneyTransferRequestTest {
 
 
     @Test
-    public void testReceiverName_NullReceiverName_ThrowsException() {
+    public void testReceiverNameValidation_NullReceiverName_ThrowsException() {
         MoneyTransferRequest request = new MoneyTransferRequest();
         request.setAccountId(14537780L);
         request.setAccountCode("IT16W0300203280825777873732");
@@ -153,7 +153,7 @@ class MoneyTransferRequestTest {
 
 
     @Test
-    public void testDescriptionName_NullDescription_ThrowsException() {
+    public void testDescriptionValidation_NullDescription_ThrowsException() {
         MoneyTransferRequest request = new MoneyTransferRequest();
         request.setAccountId(14537780L);
         request.setAccountCode("IT16W0300203280825777873732");
@@ -168,6 +168,32 @@ class MoneyTransferRequestTest {
         // Verifica che è presemte la vilazione
         assertEquals(1, violations.size());
 
+
+        Optional<String> campoObligatorio = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .filter(message -> message.equals(FIELD_REQUIRED))
+                .findAny();
+
+        // Verifica che sono presenti le violazioni attese
+        assertTrue(campoObligatorio.isPresent());
+    }
+
+
+    @Test
+    public void testExecutionDateValidation_NullDescription_ThrowsException() {
+        MoneyTransferRequest request = new MoneyTransferRequest();
+        request.setAccountId(14537780L);
+        request.setAccountCode("IT16W0300203280825777873732");
+        request.setReceiverName("John Doe");
+        request.setDescription("Description");
+        request.setCurrency("EUR");
+        request.setAmount("800");
+        request.setExecutionDate(null);
+
+        Set<ConstraintViolation<MoneyTransferRequest>> violations = validator.validate(request);
+
+        // Verifica che è presemte la vilazione
+        assertEquals(1, violations.size());
 
         Optional<String> campoObligatorio = violations.stream()
                 .map(ConstraintViolation::getMessage)
