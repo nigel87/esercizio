@@ -26,6 +26,6 @@ public class AfterStartDateValidator implements ConstraintValidator<AfterStartDa
             return true;
         }
 
-        return fromAccountingDate.isBefore(toAccountingDate);
+        return !fromAccountingDate.isAfter(toAccountingDate);
     }
 }
