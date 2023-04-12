@@ -3,18 +3,13 @@
 package it.nigelpllaha.esercizio.service;
 
 import it.nigelpllaha.esercizio.config.EsercizioConfigProperties;
-import it.nigelpllaha.esercizio.dto.AccountBalanceResponse;
-import it.nigelpllaha.esercizio.dto.AccountTransactionsResponse;
-import it.nigelpllaha.esercizio.dto.MoneyTransferRequest;
-import it.nigelpllaha.esercizio.dto.MoneyTransferResponse;
-import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.FabrickAccountBalanceResponse;
+import it.nigelpllaha.esercizio.dto.AccountBalanceDTO;
+import it.nigelpllaha.esercizio.dto.AccountTransactionsDTO;
+import it.nigelpllaha.esercizio.dto.fabrick.FabrickResponse;
+import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.PayloadAccountBalance;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.FabrickAccountTransactionResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.Payload;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.TransactionDto;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.AccountDTO;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.CreditorDTO;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferRequest;
-import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferResponse;
 import it.nigelpllaha.esercizio.exception.FabrickApiException;
 import it.nigelpllaha.esercizio.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,9 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -115,62 +108,56 @@ class FabrickServiceImplTest {
     @Test
     public void testGetAccountBalance_Success() {
 
+        PayloadAccountBalance payloadAccountBalance  = new PayloadAccountBalance();
+        payloadAccountBalance.setDate(DATE);
+        payloadAccountBalance.setBalance( BALANCE_SMALL);
+        payloadAccountBalance.setAvailableBalance(BALANCE_SMALL);
+        payloadAccountBalance.setCurrency(CURRENCY);
 
-        FabrickAccountBalanceResponse fabrickApiResponse;
-        it.nigelpllaha.esercizio.dto.fabrick.accountbalance.Payload fabrickApiPayload;
-        fabrickApiResponse = new FabrickAccountBalanceResponse();
-        fabrickApiPayload = new it.nigelpllaha.esercizio.dto.fabrick.accountbalance.Payload();
-        fabrickApiPayload.setDate(DATE);
-        fabrickApiPayload.setBalance( BALANCE_SMALL);
-        fabrickApiPayload.setAvailableBalance(BALANCE_SMALL);
-        fabrickApiPayload.setCurrency(CURRENCY);
-        fabrickApiResponse.setPayload(fabrickApiPayload);
+        FabrickResponse<PayloadAccountBalance> fabrickResponse;
+        fabrickResponse = new FabrickResponse<>(HttpStatus.OK.toString(),payloadAccountBalance,null);
 
+        when(restTemplate.getForObject(eq(URL_ACCOUNT_BALANCE), eq(FabrickResponse.class))).thenReturn(fabrickResponse);
 
-         when(restTemplate.getForObject(eq(URL_ACCOUNT_BALANCE), eq(FabrickAccountBalanceResponse.class))).thenReturn(fabrickApiResponse);
+        AccountBalanceDTO accountBalanceDTO = fabrickService.getAccountBalance(ACCOUNT_ID);
 
-        AccountBalanceResponse accountBalanceResponse = fabrickService.getAccountBalance(ACCOUNT_ID);
-
-        assertNotNull(accountBalanceResponse);
-        assertEquals(DATE, accountBalanceResponse.getDate());
-        assertEquals(  new BigDecimal(BALANCE_SMALL), accountBalanceResponse.getBalance());
-        assertEquals( new BigDecimal(BALANCE_SMALL), accountBalanceResponse.getAvailableBalance());
-        assertEquals(CURRENCY, accountBalanceResponse.getCurrency());
-        verify(restTemplate, times(1)).getForObject(anyString(), eq(FabrickAccountBalanceResponse.class));
+        assertNotNull(accountBalanceDTO);
+        assertEquals(DATE, accountBalanceDTO.getDate());
+        assertEquals(  new BigDecimal(BALANCE_SMALL), accountBalanceDTO.getBalance());
+        assertEquals( new BigDecimal(BALANCE_SMALL), accountBalanceDTO.getAvailableBalance());
+        assertEquals(CURRENCY, accountBalanceDTO.getCurrency());
+        verify(restTemplate, times(1)).getForObject(anyString(), eq(FabrickResponse.class));
     }
 
     @Test
     public void testGetAccountBalance_Success_WithBigNumber() {
-        FabrickAccountBalanceResponse fabrickApiResponse;
-        it.nigelpllaha.esercizio.dto.fabrick.accountbalance.Payload fabrickApiPayload;
-        fabrickApiResponse = new FabrickAccountBalanceResponse();
-        fabrickApiPayload = new it.nigelpllaha.esercizio.dto.fabrick.accountbalance.Payload();
-        fabrickApiPayload.setDate(DATE);
-        fabrickApiPayload.setBalance(BALANCE_BIG);
-        fabrickApiPayload.setAvailableBalance(BALANCE_BIG);
-        fabrickApiPayload.setCurrency(CURRENCY);
-        fabrickApiResponse.setPayload(fabrickApiPayload);
 
+        PayloadAccountBalance payloadAccountBalance  = new PayloadAccountBalance();
+        payloadAccountBalance.setDate(DATE);
+        payloadAccountBalance.setBalance( BALANCE_BIG);
+        payloadAccountBalance.setAvailableBalance(BALANCE_BIG);
+        payloadAccountBalance.setCurrency(CURRENCY);
+
+        FabrickResponse<PayloadAccountBalance> fabrickResponse = new FabrickResponse<>(HttpStatus.OK.toString(),payloadAccountBalance,null); ;
 
         String urlAccountBalanceBigAmount = (properties.fabrickApiUrl() + FabrickServiceImpl.OPERAZIONE_LETTURA_SALDO )
                 .replace("{accountId}", ACCOUNT_ID_BIG_AMOUNT_BALANCE.toString());
 
-        when(restTemplate.getForObject(eq(urlAccountBalanceBigAmount), eq(FabrickAccountBalanceResponse.class))).thenReturn(fabrickApiResponse);
+        when(restTemplate.getForObject(eq(urlAccountBalanceBigAmount), eq(FabrickResponse.class))).thenReturn(fabrickResponse);
 
+        AccountBalanceDTO accountBalanceDTO = fabrickService.getAccountBalance(ACCOUNT_ID_BIG_AMOUNT_BALANCE);
 
-        AccountBalanceResponse accountBalanceResponse = fabrickService.getAccountBalance(ACCOUNT_ID_BIG_AMOUNT_BALANCE);
-
-        assertNotNull(accountBalanceResponse);
-        assertEquals(DATE, accountBalanceResponse.getDate());
-        assertEquals(  new BigDecimal(BALANCE_BIG), accountBalanceResponse.getBalance());
-        assertEquals( new BigDecimal(BALANCE_BIG), accountBalanceResponse.getAvailableBalance());
-        assertEquals(CURRENCY, accountBalanceResponse.getCurrency());
-        verify(restTemplate, times(1)).getForObject(anyString(), eq(FabrickAccountBalanceResponse.class));
+        assertNotNull(accountBalanceDTO);
+        assertEquals(DATE, accountBalanceDTO.getDate());
+        assertEquals(  new BigDecimal(BALANCE_BIG), accountBalanceDTO.getBalance());
+        assertEquals( new BigDecimal(BALANCE_BIG), accountBalanceDTO.getAvailableBalance());
+        assertEquals(CURRENCY, accountBalanceDTO.getCurrency());
+        verify(restTemplate, times(1)).getForObject(anyString(), eq(FabrickResponse.class));
     }
 
     @Test
     public void testGetAccountBalance_HttpClientErrorException() {
-        when(restTemplate.getForObject(anyString(), eq(FabrickAccountBalanceResponse.class)))
+        when(restTemplate.getForObject(anyString(), eq(FabrickResponse.class)))
                 .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN, "Forbidden"));
 
 
@@ -179,7 +166,7 @@ class FabrickServiceImplTest {
 
     @Test
     public void testGetAccountBalance_RestClientException() {
-        when(restTemplate.getForObject(anyString(), eq(FabrickAccountBalanceResponse.class)))
+        when(restTemplate.getForObject(anyString(), eq(FabrickResponse.class)))
                 .thenThrow(new RestClientException("RestClientException"));
 
         assertThrows(FabrickApiException.class, () -> fabrickService.getAccountBalance(12345L));
@@ -212,7 +199,7 @@ class FabrickServiceImplTest {
 
         when(restTemplate.getForObject(eq(URL_ACCOUNT_TRANSACTION), eq(FabrickAccountTransactionResponse.class))).thenReturn(fabrickResponse);
 
-        AccountTransactionsResponse response = fabrickService.getAccountTransactions(ACCOUNT_ID,fromAccountingDate,toAccountingDate);
+        AccountTransactionsDTO response = fabrickService.getAccountTransactions(ACCOUNT_ID,fromAccountingDate,toAccountingDate);
 
         assertNotNull(response);
 

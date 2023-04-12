@@ -4,10 +4,9 @@ import it.nigelpllaha.esercizio.constants.MoneyTransferDirection;
 import it.nigelpllaha.esercizio.constants.MoneyTransferStatus;
 import lombok.Data;
 
-import java.util.Date;
 
 @Data
-public class MoneyTransferResponse {
+public class MoneyTransferDTO {
     private String moneyTransferId;
     private MoneyTransferStatus status;
     private MoneyTransferDirection direction;

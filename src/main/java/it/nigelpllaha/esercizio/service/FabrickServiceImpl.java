@@ -4,8 +4,9 @@ package it.nigelpllaha.esercizio.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.nigelpllaha.esercizio.dto.MoneyTransferResponse;
-import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.FabrickAccountBalanceResponse;
+import it.nigelpllaha.esercizio.dto.MoneyTransferDTO;
+import it.nigelpllaha.esercizio.dto.fabrick.FabrickResponse;
+import it.nigelpllaha.esercizio.dto.fabrick.accountbalance.PayloadAccountBalance;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.FabrickAccountTransactionResponse;
 import it.nigelpllaha.esercizio.dto.fabrick.accountransaction.TransactionDto;
 import it.nigelpllaha.esercizio.dto.fabrick.error.FabrickErrorMessage;
@@ -14,12 +15,12 @@ import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.CreditorDTO;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferRequest;
 import it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.FabrickMoneyTransferResponse;
 import it.nigelpllaha.esercizio.repository.TransactionRepository;
-import it.nigelpllaha.esercizio.dto.AccountTransactionsResponse;
+import it.nigelpllaha.esercizio.dto.AccountTransactionsDTO;
 import it.nigelpllaha.esercizio.dto.MoneyTransferRequest;
 import it.nigelpllaha.esercizio.entity.Transaction;
 import it.nigelpllaha.esercizio.exception.FabrickApiException;
 import it.nigelpllaha.esercizio.config.EsercizioConfigProperties;
-import it.nigelpllaha.esercizio.dto.AccountBalanceResponse;
+import it.nigelpllaha.esercizio.dto.AccountBalanceDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -58,16 +59,16 @@ public class FabrickServiceImpl implements FabrickService {
 
     }
 
-    public AccountBalanceResponse getAccountBalance(Long accountId) {
+    public AccountBalanceDTO getAccountBalance(Long accountId) {
         String url = properties.fabrickApiUrl() + OPERAZIONE_LETTURA_SALDO;
         url = url.replace("{accountId}", accountId.toString());
-        AccountBalanceResponse response = new AccountBalanceResponse();
+        AccountBalanceDTO response = new AccountBalanceDTO();
         try {
-            FabrickAccountBalanceResponse fabrickResponse = restTemplate.getForObject(url, FabrickAccountBalanceResponse.class);
+             FabrickResponse<PayloadAccountBalance> fabrickResponse = restTemplate.getForObject(url,  FabrickResponse.class);
             if (fabrickResponse == null) {
                 throw new FabrickApiException(HttpStatus.BAD_GATEWAY, NULL_FABRICK_RESPONSE);
             }
-            response = modelMapper.map(fabrickResponse.getPayload(), AccountBalanceResponse.class);
+            response = modelMapper.map(fabrickResponse.getPayload(), AccountBalanceDTO.class);
         } catch (HttpClientErrorException e) {
             FabrickErrorMessage fabrickErrorMessage = parseFabrickException (e.getMessage(),e.getStatusCode());
             handleFabrickErrorMessage(e.getStatusCode(), fabrickErrorMessage);
@@ -78,14 +79,14 @@ public class FabrickServiceImpl implements FabrickService {
         return response;
     }
 
-    public AccountTransactionsResponse getAccountTransactions(Long accountId,
-                                                              LocalDate fromAccountingDate,
-                                                              LocalDate toAccountingDate) {
+    public AccountTransactionsDTO getAccountTransactions(Long accountId,
+                                                         LocalDate fromAccountingDate,
+                                                         LocalDate toAccountingDate) {
         String url = properties.fabrickApiUrl() + OPERAZIONE_LETTURA_TRANSAZIONI;
         url = url.replace("{accountId}", accountId.toString())
                 .replace("{fromAccountingDate}", fromAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("{toAccountingDate}", toAccountingDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        AccountTransactionsResponse response = new AccountTransactionsResponse();
+        AccountTransactionsDTO response = new AccountTransactionsDTO();
         try {
             FabrickAccountTransactionResponse fabrickResponse =
                     restTemplate.getForObject(url, FabrickAccountTransactionResponse.class);
@@ -94,7 +95,7 @@ public class FabrickServiceImpl implements FabrickService {
                 throw new FabrickApiException(HttpStatus.BAD_GATEWAY , NULL_FABRICK_RESPONSE);
             }
             saveResponseToDatabase(fabrickResponse);
-            response = modelMapper.map(fabrickResponse.getPayload(), AccountTransactionsResponse.class);
+            response = modelMapper.map(fabrickResponse.getPayload(), AccountTransactionsDTO.class);
         } catch (HttpClientErrorException e) {
             FabrickErrorMessage fabrickErrorMessage = parseFabrickException (e.getMessage(), e.getStatusCode());
             handleFabrickErrorMessage(e.getStatusCode(), fabrickErrorMessage);
@@ -104,7 +105,7 @@ public class FabrickServiceImpl implements FabrickService {
         return response;
     }
 
-    public MoneyTransferResponse createMoneyTransfer(MoneyTransferRequest input) {
+    public MoneyTransferDTO createMoneyTransfer(MoneyTransferRequest input) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(TIME_ZONE_HEADER, TIME_ZONE_VALUE);
@@ -112,7 +113,7 @@ public class FabrickServiceImpl implements FabrickService {
         final String url = (properties.fabrickApiUrl() + OPERAZIONE_BONIFICO)
                 .replace("{accountId}", input.getAccountId().toString());
 
-        MoneyTransferResponse response = new MoneyTransferResponse();
+        MoneyTransferDTO response = new MoneyTransferDTO();
         HttpEntity<FabrickMoneyTransferRequest> httpEntity = new HttpEntity<>(request, headers);
         try {
             ResponseEntity<FabrickMoneyTransferResponse> fabrickResponse = restTemplate.postForEntity(url, httpEntity, FabrickMoneyTransferResponse.class);
@@ -193,8 +194,8 @@ public class FabrickServiceImpl implements FabrickService {
     }
 
 
-    private MoneyTransferResponse convertResponse (it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.Payload fabrickPayload) {
-        return modelMapper.map(fabrickPayload, MoneyTransferResponse.class);
+    private MoneyTransferDTO convertResponse (it.nigelpllaha.esercizio.dto.fabrick.moneytransfer.Payload fabrickPayload) {
+        return modelMapper.map(fabrickPayload, MoneyTransferDTO.class);
     }
     private static Transaction transactionDtoToEntityConverter( TransactionDto dto) {
         Transaction transaction = modelMapper.map(dto, Transaction.class);

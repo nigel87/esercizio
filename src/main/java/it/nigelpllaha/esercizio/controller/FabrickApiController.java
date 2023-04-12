@@ -1,11 +1,8 @@
 package it.nigelpllaha.esercizio.controller;
 
-import it.nigelpllaha.esercizio.dto.AccountTransactionsResponse;
-import it.nigelpllaha.esercizio.dto.MoneyTransferRequest;
-import it.nigelpllaha.esercizio.dto.MoneyTransferResponse;
+import it.nigelpllaha.esercizio.dto.*;
 import it.nigelpllaha.esercizio.exception.InvalidAccountingDatesException;
 import it.nigelpllaha.esercizio.service.FabrickService;
-import it.nigelpllaha.esercizio.dto.AccountBalanceResponse;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -32,14 +29,15 @@ public class FabrickApiController {
     }
 
     @GetMapping(MAPPING_SALDO)
-    public ResponseEntity<AccountBalanceResponse> getAccountBalance(@PathVariable Long accountId) {
-        AccountBalanceResponse response = fabrickService.getAccountBalance(accountId);
+    public ResponseEntity<Response<AccountBalanceDTO>> getAccountBalance(@PathVariable Long accountId) {
+        AccountBalanceDTO payload = fabrickService.getAccountBalance(accountId);
+        Response<AccountBalanceDTO> response = new Response<>(true,payload,null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
     @GetMapping(MAPPING_LETTURA_TRANSAZIONI)
-    public ResponseEntity<AccountTransactionsResponse> getAccountTransactions(
+    public ResponseEntity<Response<AccountTransactionsDTO>>getAccountTransactions(
             @PathVariable Long accountId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromAccountingDate,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toAccountingDate
@@ -64,13 +62,16 @@ public class FabrickApiController {
             throw new InvalidAccountingDatesException(errorMessages);
         }
 
-        AccountTransactionsResponse response = fabrickService.getAccountTransactions(accountId, fromAccountingDate,toAccountingDate);
+        AccountTransactionsDTO payload = fabrickService.getAccountTransactions(accountId, fromAccountingDate,toAccountingDate);
+        Response<AccountTransactionsDTO> response = new Response<>(true,payload,null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(MAPPING_BONIFICO)
-    public ResponseEntity<MoneyTransferResponse> transferMoney(@Valid @RequestBody MoneyTransferRequest request) {
-        MoneyTransferResponse response = fabrickService.createMoneyTransfer(request);
+    public ResponseEntity<Response<MoneyTransferDTO>> transferMoney(@Valid @RequestBody MoneyTransferRequest request) {
+        MoneyTransferDTO payload = fabrickService.createMoneyTransfer(request);
+        Response<MoneyTransferDTO> response = new Response<>(true,payload,null);
+
         return ResponseEntity.ok(response);
     }
 

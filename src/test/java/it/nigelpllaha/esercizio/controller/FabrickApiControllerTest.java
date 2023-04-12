@@ -1,6 +1,7 @@
 package it.nigelpllaha.esercizio.controller;
 
-import it.nigelpllaha.esercizio.dto.AccountTransactionsResponse;
+import it.nigelpllaha.esercizio.dto.AccountTransactionsDTO;
+import it.nigelpllaha.esercizio.dto.Response;
 import it.nigelpllaha.esercizio.exception.InvalidAccountingDatesException;
 import it.nigelpllaha.esercizio.service.FabrickService;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,30 +54,31 @@ public class FabrickApiControllerTest {
 
     @Test
     public void testGetAccountTransactions_ValidDates_ReturnsResponseEntityWithHttpStatusOK() {
-         AccountTransactionsResponse expectedResponse = new AccountTransactionsResponse();
-        when(fabrickService.getAccountTransactions(accountId, oneMonthAgo, yesterday))
-                .thenReturn(expectedResponse);
 
-        ResponseEntity<AccountTransactionsResponse> response = fabrickApiController
+        AccountTransactionsDTO expectedPayload = new AccountTransactionsDTO();
+        when(fabrickService.getAccountTransactions(accountId, oneMonthAgo, yesterday))
+                .thenReturn(expectedPayload);
+
+        ResponseEntity<Response<AccountTransactionsDTO>>response = fabrickApiController
                 .getAccountTransactions(accountId, oneMonthAgo, yesterday);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedResponse, response.getBody());
+        assertEquals(expectedPayload, response.getBody().getPayload());
         verify(fabrickService, times(1))
                 .getAccountTransactions(accountId, oneMonthAgo, yesterday);
     }
-
     @Test
     public void testGetAccountTransactions_TodayDate_ReturnsResponseEntityWithHttpStatusOK() {
-        AccountTransactionsResponse expectedResponse = new AccountTransactionsResponse();
-        when(fabrickService.getAccountTransactions(accountId, today, today))
-                .thenReturn(expectedResponse);
 
-        ResponseEntity<AccountTransactionsResponse> response = fabrickApiController
+        AccountTransactionsDTO expectedPayload = new AccountTransactionsDTO();
+        when(fabrickService.getAccountTransactions(accountId, today, today))
+                .thenReturn(expectedPayload);
+
+        ResponseEntity<Response<AccountTransactionsDTO>>response = fabrickApiController
                 .getAccountTransactions(accountId, today, today);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedResponse, response.getBody());
+        assertEquals(expectedPayload, response.getBody().getPayload());
         verify(fabrickService, times(1))
                 .getAccountTransactions(accountId, today, today);
     }

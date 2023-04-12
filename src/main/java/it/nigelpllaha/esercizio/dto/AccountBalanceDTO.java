@@ -5,7 +5,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class AccountBalanceResponse {
+public class AccountBalanceDTO {
     private String date; //TODO convert to Date
     private BigDecimal balance;
     private BigDecimal availableBalance;
